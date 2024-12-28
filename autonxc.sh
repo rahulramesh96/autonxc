@@ -32,36 +32,47 @@ netexec() {
     netexec smb $ip -u $user -p $pass "$4"
 }
 
-# Basic enumeration for empty/guest user or no credentials
-echo "[*] Enumerating shares and other details for $TARGETS with empty/guest user"
-netexec $TARGETS "" "" "--shares"
-netexec $TARGETS "" "" "-M spider_plus"
-netexec $TARGETS "" "" "--sessions"
-netexec $TARGETS "" "" "--disks"
-netexec $TARGETS "" "" "--loggedon-users"
-netexec $TARGETS "" "" "--users"
-netexec $TARGETS "" "" "--groups"
-netexec $TARGETS "" "" "--local-groups"
-netexec $TARGETS "" "" "--pass-pol"
+# List of users to check
+USERS=("anonymous" "" "guest" "autonxc")
 
-# Check specific user credentials or hash
-echo "[*] Checking with specific credentials"
-USERNAMES=("user1" "user2" "admin")  # Add more usernames as needed
-PASSWORDS=("password1" "password2" "Summer18")  # Add more passwords or use a file
+# List of passwords to check
+PASSWORDS=("ouasidyas" "guest" "autonxc" "anonymous" "")
 
-for USERNAME in "${USERNAMES[@]}"; do
+# Enumeration for the specified users and passwords
+for USERNAME in "${USERS[@]}"; do
     for PASS in "${PASSWORDS[@]}"; do
+        echo "[*] Enumerating for $USERNAME:$PASS on $TARGETS"
+
+        # Enumerate shares
+        netexec $TARGETS $USERNAME $PASS "--shares"
+        # Search for specific files in shares
+        netexec $TARGETS $USERNAME $PASS "-M spider_plus"
+        # Enumerate sessions
+        netexec $TARGETS $USERNAME $PASS "--sessions"
+        # Enumerate disks
+        netexec $TARGETS $USERNAME $PASS "--disks"
+        # Enumerate logged on users
+        netexec $TARGETS $USERNAME $PASS "--loggedon-users"
+        # Enumerate domain users
+        netexec $TARGETS $USERNAME $PASS "--users"
+        # Enumerate groups
+        netexec $TARGETS $USERNAME $PASS "--groups"
+        # Enumerate local groups
+        netexec $TARGETS $USERNAME $PASS "--local-groups"
+        # Password policy enumeration
+        netexec $TARGETS $USERNAME $PASS "--pass-pol"
+        # Check credentials with empty password or hashes
         netexec $TARGETS $USERNAME $PASS ""
         netexec $TARGETS $USERNAME $PASS "-H 'LM:NT'"
         netexec $TARGETS $USERNAME $PASS "-H 'NTHASH'"
     done
 done
 
-# Null session
+# Null session for empty user credentials
 echo "[*] Attempting null session"
 netexec $TARGETS "" "" ""
 
-# Password spraying
+# Password spraying attempt
 echo "[*] Running password spraying"
 netexec $TARGETS $USERNAME user2 user3 -p Summer18
 netexec $TARGETS $USERNAME -p /path/to/$PASSs.txt
