@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x  # Enable debugging
+
 # Function to display usage
 usage() {
     echo "Usage: $0 -i <IP_ADDRESS>"
@@ -33,10 +35,10 @@ netexec() {
 }
 
 # List of users to check
-USERS=("anonymous" "" "guest" "autonxc")
+USERS=("" "anonymous" "guest" "autonxc")
 
 # List of passwords to check
-PASSWORDS=("ouasidyas" "guest" "autonxc" "anonymous" "")
+PASSWORDS=("" "guest" "autonxc" "anonymous")
 
 # Enumeration for the specified users and passwords
 for USERNAME in "${USERS[@]}"; do
